@@ -10,7 +10,13 @@ from langchain_huggingface.llms import HuggingFacePipeline
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
-from prompts import FIND_RELEVANT_TOPIC_PROMPT, GET_NEW_TOPIC_SUMMARY_PROMPT, GET_NEW_TOPIC_LABEL_PROMPT
+from prompts import (
+    FIND_RELEVANT_TOPIC_PROMPT,
+    GET_NEW_TOPIC_SUMMARY_PROMPT,
+    GET_NEW_TOPIC_LABEL_PROMPT,
+    UPDATE_TOPIC_SUMMARY_PROMPT,
+    UPDATE_TOPIC_LABEL_PROMPT,
+)
 from schema import TopicId
 from settings import ModelHfSettings, ModelOpenAiSettings, ModelSettings
 
@@ -127,15 +133,41 @@ class AgenticTextCls:
             return topic_id_found
         return None
 
+    def _update_topic_summary(self, text: str) -> str:
+        prompt_template = ChatPromptTemplate.from_messages(
+            [
+                ("system", UPDATE_TOPIC_SUMMARY_PROMPT),
+                (
+                    "user",
+                    "Determine the summary of the new topic that this text will go into:\n{text}",
+                ),
+            ]
+        )
+        chain = prompt_template | self.llm
+        new_topic_summary = chain.invoke({"text": text}).content
+        return new_topic_summary
+
+    def _update_topic_label(self, summary: str) -> str:
+        prompt_template = ChatPromptTemplate.from_messages(
+            [
+                ("system", UPDATE_TOPIC_LABEL_PROMPT),
+                (
+                    "user",
+                    "Determine the label of the topic that this summary belongs to:\n{summary}",
+                ),
+            ]
+        )
+        chain = prompt_template | self.llm
+        new_topic_label = chain.invoke({"summary": summary}).content
+        return new_topic_label
+
     def _add_text_to_topic(self, topic_id: str, text: str) -> None:
         self.topics[topic_id]["texts"].append(text)
         # TODO Implement the following methods to update topic summaries and labels
         if self.generate_new_metadata_idx:
-            self.topics[topic_id]["summary"] = self._update_topic_summary(
-                self.topics[topic_id]
-            )
+            self.topics[topic_id]["summary"] = self._update_topic_summary(text)
             self.topics[topic_id]["label"] = self._update_topic_label(
-                self.topics[topic_id]
+                self.topics[topic_id]["summary"]
             )
 
     def _update_topic_outline(self, single_topic_outline: str) -> None:
@@ -145,16 +177,18 @@ class AgenticTextCls:
         PROMPT = ChatPromptTemplate.from_messages(
             [
                 (
-                    "system", GET_NEW_TOPIC_SUMMARY_PROMPT,
+                    "system",
+                    GET_NEW_TOPIC_SUMMARY_PROMPT,
                 ),
-                ("user", "Determine the summary of the new topic that this proposition will go into:\n{text}"),
+                (
+                    "user",
+                    "Determine the summary of the new topic that this proposition will go into:\n{text}",
+                ),
             ]
         )
 
         runnable = PROMPT | self.llm
-        new_topic_summary = runnable.invoke({
-            "text": text
-        }).content
+        new_topic_summary = runnable.invoke({"text": text}).content
 
         return new_topic_summary
 
@@ -162,20 +196,24 @@ class AgenticTextCls:
         PROMPT = ChatPromptTemplate.from_messages(
             [
                 (
-                    "system", GET_NEW_TOPIC_LABEL_PROMPT,
+                    "system",
+                    GET_NEW_TOPIC_LABEL_PROMPT,
                 ),
-                ("user", "Determine the title of the topic that this summary belongs to:\n{new_topic_summary}"),
+                (
+                    "user",
+                    "Determine the title of the topic that this summary belongs to:\n{new_topic_summary}",
+                ),
             ]
         )
 
         runnable = PROMPT | self.llm
 
-        new_topic_label = runnable.invoke({
-            "new_topic_summary": new_topic_summary
-        }).content
+        new_topic_label = runnable.invoke(
+            {"new_topic_summary": new_topic_summary}
+        ).content
 
         return new_topic_label
-    
+
     def _create_new_topic(self, text: str) -> None:
         new_topic_id = str(uuid.uuid4())[: self.topic_id_len]
         new_topic_summary = self._get_new_topic_summary(text)

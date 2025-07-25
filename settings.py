@@ -36,6 +36,7 @@ class ModelSettings(BaseSettings):
     )
 
     use_hf: bool = False
+
     def get_model_config(self) -> Union[ModelHfSettings, ModelOpenAiSettings]:
         if self.use_hf:
             return ModelHfSettings()

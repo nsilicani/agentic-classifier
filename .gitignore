@@ -212,3 +212,6 @@ __marimo__/
 # pycache
 __pycache__/
 *.pyc
+
+# data folder
+data/

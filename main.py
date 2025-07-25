@@ -13,7 +13,9 @@ def main():
     agentic_config = AgentSettings()
     setup_logging(agentic_config)
     configs = ModelSettings()
-    ac = AgenticTextCls(model_settings=configs, logger=logger, generate_new_metadata_idx=False)
+    ac = AgenticTextCls(
+        model_settings=configs, logger=logger, generate_new_metadata_idx=False
+    )
 
     ## Comment and uncomment the propositions to your hearts content
     texts = [
@@ -25,7 +27,7 @@ def main():
     ]
     for text in texts:
         ac.classify_text(text=text)
-    
+
     logger.info(f"Dict with topics:\n{ac.topics}")
 
 

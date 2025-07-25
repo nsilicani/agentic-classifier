@@ -1,67 +1,127 @@
 FIND_RELEVANT_TOPIC_PROMPT = """
-Determine whether or not the "Text Email" should belong to any of the existing topics.
+You are an intelligent assistant for classifying internal corporate emails into existing topics.
 
-Instructions:
-- Carefully read the "Text Email".
-- Review the list of "Current Topics", which include a Topic ID, a Topic Label or Name, and a Topic Summary.
-- Decide if the email matches the meaning or intention of any existing topic.
-- If the email fits well within an existing topic, return the corresponding Topic ID.
-- If the email does not match any existing topic, return "No topics".
+## Task
+Given a new email, determine whether it belongs to any of the **existing topics** provided below.
 
-Example:
-Input:
-    - Text Email: "Lucy,
+## Instructions:
+- Read the corporate email ("Email Text").
+- Review the list of current topics, which each include a Topic ID, Label, and Summary.
+- Check if the email's **intent**, **subject**, or **content** aligns closely with any topic summary.
+- If it fits one topic clearly, return the Topic ID.
+- If none of the topics are a good fit, return "No topics".
 
-        Here are the actual utility bills versus the cap.  Did we collect 
-        these overages?  Let's discuss further?  Remember these bills were paid in 
-        July and August.  The usage dates are much earlier.  I have the bills but I 
-        can get them to you if need be.
+## Matching Criteria:
+- Match by business intent (e.g., invoice issue, meeting scheduling, budget request).
+- Ignore small stylistic or wording differences.
+- Be strict: only assign to a topic if there's a clear and relevant match.
 
-        Philip"
-    - Current Topics:
-        - Topic ID: 2n4l
-          Topic Label: Office Supplies Order
-          Topic Summary: Emails related to purchasing, tracking, or requesting office materials such as printers, pens, paper, computers, or other administrative equipment and supplies.
+## Format:
+Only respond with either a Topic ID or the string: No topics
 
-        - Topic ID: 9k45
-          Topic Name: Utility Bill
-          Topic Summary: Emails related to periodic statement of charges for essential services like electricity, gas, water, and sometimes internet or waste disposal. These bills typically include account details, usage information, amount due, and payment instructions
+### Example
+Email Text:
+"Lucy,
 
-Output: 9k45
+Here are the actual utility bills versus the cap. Did we collect 
+these overages? Let's discuss further? Remember these bills were paid in 
+July and August. The usage dates are much earlier. I have the bills but I 
+can get them to you if need be.
+
+Philip"
+
+Current Topics:
+- Topic ID: 2n4l
+  Topic Label: Office Supplies Order
+  Topic Summary: Emails related to purchasing or requesting administrative supplies.
+
+- Topic ID: 9k45
+  Topic Label: Utility Bill
+  Topic Summary: Emails about periodic service charges (e.g., electricity, gas, water) including usage, payment, or billing questions.
+
+Output:
+9k45
 """
 
 GET_NEW_TOPIC_SUMMARY_PROMPT = """
-You are the steward of a group of topics which represent groups of sentences that talk about a similar topic
-You should generate a very brief 1-sentence summary which will inform viewers what a topic group is about.
+You are helping organize internal corporate emails into coherent topic groups.
 
-A good summary will say what the topic is about, and give any clarifying instructions on what to add to the topic.
+## Task:
+Given a new email, generate a one-sentence summary that describes what this new topic group is about.
 
-You will be given a proposition which will go into a new topic. This new topic needs a summary.
+## Guidelines:
+- Be brief and clear.
+- Generalize to a business domain where possible.
+- Focus on the **intent** and **context** of the email (e.g., budget discussion, vendor payment, meeting scheduling).
+- Avoid overly specific summaries that won't generalize to similar emails.
 
-Your summaries should anticipate generalization. If you get a proposition about apples, generalize it to food.
-Or month, generalize it to "date and times".
+## Example:
 
-Example:
-Input: Proposition: Greg likes to eat pizza
-Output: This topic contains information about the types of food Greg likes to eat.
+Email: "Please send over the July invoice for review"
+Output: This topic involves emails related to invoice requests and processing.
 
-Only respond with the new topic summary, nothing else.
+Only return the summary sentence.
 """
 
 GET_NEW_TOPIC_LABEL_PROMPT = """
-You are the steward of a group of topics which represent groups of sentences that talk about a similar topic
-You should generate a very brief few word title which will inform viewers what a topic group is about.
+You are generating short, descriptive labels for groups of corporate emails.
 
-A good topic title is brief but encompasses what the topic is about
+## Task:
+Given a one-sentence summary of a topic, write a **short topic label** (2–5 words) that clearly reflects the business theme.
 
-You will be given a summary of a topic which needs a title
+## Guidelines:
+- Be concise.
+- Use terms suitable for routing emails to the correct mailbox based on topic (e.g., "Invoice Issues", "Meeting Scheduling").
+- Generalize appropriately (e.g., “Utilities” instead of “Water Bill for March”).
+- Avoid using full sentences or names.
 
-Your titles should anticipate generalization. If you get a proposition about apples, generalize it to food.
-Or month, generalize it to "date and times".
+## Example:
+Summary: Emails related to invoice processing, billing questions, or payment schedules.
+Output: Invoice Processing
 
-Example:
-Input: Summary: This topic is about dates and times that the author talks about
-Output: Date & Times
+Summary: Emails about scheduling internal team meetings or calendar updates.
+Output: Meeting Scheduling
 
-Only respond with the new topic title, nothing else.
+Only return the topic label.
+"""
+
+UPDATE_TOPIC_SUMMARY_PROMPT = """
+You are maintaining topic summaries for groups of corporate emails.
+
+## Task:
+Given a new email that will be added to an existing topic, update the topic summary so that it still:
+- Describes the overall theme of the topic.
+- Reflects the new information from the latest email.
+
+## Guidelines:
+- Be concise (1 sentence).
+- Keep the summary general, covering **all** emails in the topic.
+- Incorporate the key intent or context from the new email.
+- Avoid repeating exact phrases from the new email.
+
+## Example:
+Existing Summary: Emails about utility charges and monthly billing.
+New Email: "We were overcharged for gas usage in August. Please review the statement."
+
+Output: This topic includes emails related to billing discrepancies and utility charge reviews.
+
+Only return the updated topic summary.
+"""
+
+UPDATE_TOPIC_LABEL_PROMPT = """
+You are updating the label of a corporate email topic based on an updated summary.
+
+## Task:
+Given the revised topic summary, provide a new short topic label (2–5 words) that better captures the theme of all emails in the topic.
+
+## Guidelines:
+- Be concise and business-relevant.
+- Avoid being too specific to one email.
+- Make sure the label would make sense in a dashboard or filter.
+
+## Example:
+Updated Summary: This topic includes emails related to billing discrepancies and utility charge reviews.
+Output: Utility Billing Issues
+
+Only return the topic label.
 """
