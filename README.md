@@ -32,3 +32,12 @@ Automatically discover and assign texts (e.g., emails) into coherent topics usin
   "label": "Invoice Disputes",
   "texts": ["..."]
 }
+```
+
+## Demo
+Please see the [notebook](demo.ipynb) for a Demo
+
+## Limitations and Future Work
+We introduced Agentic Classifier, a LLM-based tool framework to discover latent topics in a text collection. Optionally, a refining operation of generated topics may be adopted in order to obtain a final topic list which is coherent and non-redundant. 
+Future work will encompass an evaluation step of produced output with a LLM-as-a-Judge framework.
+
