@@ -128,7 +128,6 @@ class AgenticTextCls:
         # TODO Add a Validation step here
         if topic_found and topic_found.topic_id != "No topics":
             self.logger.info(f"Found topic: `{topic_found}`")
-            # parsed_out = topic_found.additional_kwargs["parsed"]
             topic_id_found = topic_found.topic_id
             return topic_id_found
         return None
@@ -163,7 +162,6 @@ class AgenticTextCls:
 
     def _add_text_to_topic(self, topic_id: str, text: str) -> None:
         self.topics[topic_id]["texts"].append(text)
-        # TODO Implement the following methods to update topic summaries and labels
         if self.generate_new_metadata_idx:
             self.topics[topic_id]["summary"] = self._update_topic_summary(text)
             self.topics[topic_id]["label"] = self._update_topic_label(
