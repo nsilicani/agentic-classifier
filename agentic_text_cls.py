@@ -124,7 +124,6 @@ class AgenticTextCls:
             {"text": text, "current_topic_outline": current_topic_outline}
         )
         topic_found = self.structured_llm.invoke(prompt)
-        # self.logger.info(f"Found topic: `{topic_found}`")
         # TODO Add a Validation step here
         if topic_found and topic_found.topic_id != "No topics":
             self.logger.info(f"Found topic: `{topic_found}`")
